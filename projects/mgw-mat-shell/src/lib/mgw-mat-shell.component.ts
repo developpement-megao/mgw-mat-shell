@@ -1,5 +1,5 @@
-import { NgFor, NgIf } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { MediaMatcher } from '@angular/cdk/layout';
@@ -15,6 +15,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 
 import { MatListModule } from '@angular/material/list';
+import { LinkIsActiveLinkPipe } from './link-is-active-link.pipe';
+import { MenuElemGetGroupPipe } from './menu-elem-get-group.pipe';
+import { MenuElemGetLinkPipe, menuElemIsLink } from './menu-elem-get-link.pipe';
 
 export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | undefined;
 
@@ -39,117 +42,131 @@ export interface AppShellMenuActions {
 @Component({
   selector: 'lib-mgw-mat-shell',
   standalone: true,
-  imports: [NgIf, NgFor, MatButtonModule, MatIconModule, MatSidenavModule, MatToolbarModule, MatMenuModule, MatListModule, RouterLink],
+  imports: [
+    NgIf,
+    NgFor,
+    MatButtonModule,
+    MatIconModule,
+    MatSidenavModule,
+    MatToolbarModule,
+    MatMenuModule,
+    MatListModule,
+    RouterLink,
+    LinkIsActiveLinkPipe,
+    MenuElemGetGroupPipe,
+    MenuElemGetLinkPipe,
+    NgTemplateOutlet
+  ],
   template: `
-  <div class="shell-container" [class.device-is-mobile]="mobileQuery.matches">
-  <mat-toolbar class="shell-toolbar" [color]="toolbarColor">
-    <button *ngIf="menuLinks" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
-      <mat-icon>{{ sidenavOpening ? snavIconOpened || iconSidenavOpened : snavIconClosed || iconSidenavClosed }}</mat-icon>
-    </button>
-    <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
-    <h1 *ngIf="appTitle" class="app-name">{{ appTitle }}</h1>
-    <span class="toolbar-spacer"></span>
-    <button *ngIf="menuActions" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Ouverture menu action">
-      <mat-icon>{{ menuActionIconOpen || iconMenuActionOpen }}</mat-icon>
-    </button>
-    <mat-menu #menu="matMenu">
-      <button *ngFor="let item of menuActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.menuText)">
-        <mat-icon *ngIf="item.menuIco">{{ item.menuIco }}</mat-icon>
-        <span>{{ item.menuText }}</span>
-      </button>
-    </mat-menu>
-  </mat-toolbar>
+    <div class="shell-container" [class.device-is-mobile]="mobileQuery.matches">
+      <mat-toolbar class="shell-toolbar" [color]="toolbarColor">
+        <button *ngIf="menuLinks" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
+          <mat-icon>{{ sidenavOpening ? snavIconOpened || iconSidenavOpened : snavIconClosed || iconSidenavClosed }}</mat-icon>
+        </button>
+        <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
+        <h1 *ngIf="appTitle" class="app-name">{{ appTitle }}</h1>
+        <span class="toolbar-spacer"></span>
+        <button *ngIf="menuActions" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Ouverture menu action">
+          <mat-icon>{{ menuActionIconOpen || iconMenuActionOpen }}</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button *ngFor="let item of menuActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.menuText)">
+            <mat-icon *ngIf="item.menuIco">{{ item.menuIco }}</mat-icon>
+            <span>{{ item.menuText }}</span>
+          </button>
+        </mat-menu>
+      </mat-toolbar>
 
-  <mat-sidenav-container class="shell-sidenav-container" [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
-    <mat-sidenav
-      #snav
-      [mode]="forceMode ?? (mobileQuery.matches ? forceModeMobile ?? sidenavModeMobile : forceModeDesktop ?? sidenavModeDesktop)"
-      [disableClose]="sidenavDisableClose"
-      [fixedInViewport]="mobileQuery.matches"
-      fixedTopGap="56"
-      [(opened)]="isSidenavOpened"
-      (openedStart)="sidenavOpenedStart()"
-      (openedChange)="sidenavOpenedChange($event)">
-      <mat-nav-list>
-        <ng-container *ngFor="let lk of menuLinks; trackBy: trackByLinkFn">
-          <div *ngIf="lk | menuElemGetGroup as lkGrp" mat-subheader>{{ lkGrp.groupLibelle }}</div>
-          <a
-            *ngIf="lk | menuElemGetLink as lkLink"
-            mat-list-item
-            [routerLink]="lkLink.shellLink"
-            [activated]="lkLink.shellLink | linkIsActiveLink: activeLink"
-            (click)="clicLink(lkLink.shellLink)">
-            <mat-icon *ngIf="lkLink.linkIcone" matListItemIcon [class.icon-subtitle]="lkLink.linkSubtitle">{{ lkLink.linkIcone }}</mat-icon>
-            <div matListItemTitle>{{ lkLink.linkLabel }}</div>
-            <div *ngIf="lkLink.linkSubtitle" matListItemLine>{{ lkLink.linkSubtitle }}</div>
-          </a>
-          <mat-divider *ngIf="lk === true"></mat-divider>
-        </ng-container>
-      </mat-nav-list>
-    </mat-sidenav>
+      <mat-sidenav-container class="shell-sidenav-container" [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
+        <mat-sidenav
+          #snav
+          [mode]="forceMode ?? (mobileQuery.matches ? forceModeMobile ?? sidenavModeMobile : forceModeDesktop ?? sidenavModeDesktop)"
+          [disableClose]="sidenavDisableClose"
+          [fixedInViewport]="mobileQuery.matches"
+          fixedTopGap="56"
+          [(opened)]="isSidenavOpened"
+          (openedStart)="sidenavOpenedStart()"
+          (openedChange)="sidenavOpenedChange($event)">
+          <mat-nav-list>
+            <ng-container *ngFor="let lk of menuLinks; trackBy: trackByLinkFn">
+              <div *ngIf="lk | menuElemGetGroup as lkGrp" mat-subheader>{{ lkGrp.groupLibelle }}</div>
+              <a
+                *ngIf="lk | menuElemGetLink as lkLink"
+                mat-list-item
+                [routerLink]="lkLink.shellLink"
+                [activated]="lkLink.shellLink | linkIsActiveLink: activeLink"
+                (click)="clicLink(lkLink.shellLink)">
+                <mat-icon *ngIf="lkLink.linkIcone" matListItemIcon [class.icon-subtitle]="lkLink.linkSubtitle">{{ lkLink.linkIcone }}</mat-icon>
+                <div matListItemTitle>{{ lkLink.linkLabel }}</div>
+                <div *ngIf="lkLink.linkSubtitle" matListItemLine>{{ lkLink.linkSubtitle }}</div>
+              </a>
+              <mat-divider *ngIf="lk === true"></mat-divider>
+            </ng-container>
+          </mat-nav-list>
+        </mat-sidenav>
 
-    <mat-sidenav-content>
-      <router-outlet></router-outlet>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
-</div>
+        <mat-sidenav-content *ngIf="contentTemplate">
+          <ng-container [ngTemplateOutlet]="contentTemplate"></ng-container>
+        </mat-sidenav-content>
+      </mat-sidenav-container>
+    </div>
   `,
-  styles: [`
-  .shell-container {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-}
+  styles: [
+    `
+      .shell-container {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
 
-.device-is-mobile .shell-toolbar {
-  position: fixed;
-  z-index: 2;
-}
+      .device-is-mobile .shell-toolbar {
+        position: fixed;
+        z-index: 2;
+      }
 
-h1.app-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+      h1.app-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-.shell-sidenav-container {
-  flex: 1;
-}
+      .shell-sidenav-container {
+        flex: 1;
+      }
 
-.device-is-mobile .shell-sidenav-container {
-  flex: 1 0 auto;
-}
+      .device-is-mobile .shell-sidenav-container {
+        flex: 1 0 auto;
+      }
 
-.mdc-list-item.mdc-list-item--with-two-lines .mdc-list-item__start.icon-subtitle {
-  margin-top: 23px;
-}
+      .mdc-list-item.mdc-list-item--with-two-lines .mdc-list-item__start.icon-subtitle {
+        margin-top: 23px;
+      }
 
-h1.app-name,
-img.app-logo {
-  margin-left: 8px;
-}
+      h1.app-name,
+      img.app-logo {
+        margin-left: 8px;
+      }
 
-img.app-logo {
-  height: 48px;
+      img.app-logo {
+        height: 48px;
+      }
 
-}
+      .toolbar-spacer {
+        flex: 1 1 auto;
+      }
 
-.toolbar-spacer {
-  flex: 1 1 auto;
-}
-
-@media screen and (max-width: 242px) {
-  img.app-logo {
-    display: none;
-  }
-}
-
-  `]
+      @media screen and (max-width: 242px) {
+        img.app-logo {
+          display: none;
+        }
+      }
+    `
+  ]
 })
-export class MgwMatShellComponent {
+export class MgwMatShellComponent implements OnDestroy {
   @Input() menuLinks: ReadonlyArray<AppShellMenuElems> | undefined;
   @Input() isSidenavOpened: BooleanInputTrueFalse | undefined;
   @Input() appTitle: string | undefined;
@@ -164,6 +181,7 @@ export class MgwMatShellComponent {
   @Input() appLogo: string | undefined;
   @Input() menuActionIconOpen: string | undefined;
   @Input() menuActions: ReadonlyArray<AppShellMenuActions> | undefined;
+  @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
 
   @Output() readonly changeLinkNav: EventEmitter<string> = new EventEmitter<string>();
   @Output() readonly clicBtAction: EventEmitter<string> = new EventEmitter<string>();
