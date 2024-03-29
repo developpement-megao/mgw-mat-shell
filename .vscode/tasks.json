@@ -37,6 +37,32 @@
           }
         }
       }
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": [],
+      "label": "npm: build",
+      "detail": "ng build"
+    },
+    {
+      "type": "npm",
+      "script": "build:prod",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": [],
+      "label": "npm: build:prod",
+      "detail": "ng build mgw-mat-shell --configuration production"
+    },
+    {
+      "type": "npm",
+      "script": "lint",
+      "isBackground": true,
+      "problemMatcher": [],
+      "label": "npm: lint",
+      "detail": "ng lint"
     }
   ]
 }
