@@ -1,4 +1,4 @@
-import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import { KeyValue, KeyValuePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, Output, TemplateRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -39,6 +39,8 @@ export interface AppShellMenuActions {
   menuIco?: string;
 }
 
+export type AppShellActionKey = string | number;
+
 @Component({
   selector: 'lib-mgw-mat-shell',
   standalone: true,
@@ -55,24 +57,25 @@ export interface AppShellMenuActions {
     LinkIsActiveLinkPipe,
     MenuElemGetGroupPipe,
     MenuElemGetLinkPipe,
-    NgTemplateOutlet
+    NgTemplateOutlet,
+    KeyValuePipe
   ],
   template: `
     <div class="shell-container" [class.device-is-mobile]="mobileQuery.matches">
       <mat-toolbar class="shell-toolbar" [color]="toolbarColor">
-        <button *ngIf="menuLinks" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
+        <button *ngIf="linksList" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
           <mat-icon>{{ sidenavOpening ? snavIconOpened || iconSidenavOpened : snavIconClosed || iconSidenavClosed }}</mat-icon>
         </button>
         <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
         <h1 *ngIf="appTitle" class="app-name">{{ appTitle }}</h1>
         <span class="toolbar-spacer"></span>
-        <button *ngIf="menuActions" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Ouverture menu action">
+        <button *ngIf="actionsList" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Ouverture menu action">
           <mat-icon>{{ menuActionIconOpen || iconMenuActionOpen }}</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
-          <button *ngFor="let item of menuActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.menuText)">
-            <mat-icon *ngIf="item.menuIco">{{ item.menuIco }}</mat-icon>
-            <span>{{ item.menuText }}</span>
+          <button *ngFor="let item of actionsList | keyvalue: compareKeyValueActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.key)">
+            <mat-icon *ngIf="item.value.menuIco">{{ item.value.menuIco }}</mat-icon>
+            <span>{{ item.value.menuText }}</span>
           </button>
         </mat-menu>
       </mat-toolbar>
@@ -88,7 +91,7 @@ export interface AppShellMenuActions {
           (openedStart)="sidenavOpenedStart()"
           (openedChange)="sidenavOpenedChange($event)">
           <mat-nav-list>
-            <ng-container *ngFor="let lk of menuLinks; trackBy: trackByLinkFn">
+            <ng-container *ngFor="let lk of linksList; trackBy: trackByLinkFn">
               <div *ngIf="lk | menuElemGetGroup as lkGrp" mat-subheader>{{ lkGrp.groupLibelle }}</div>
               <a
                 *ngIf="lk | menuElemGetLink as lkLink"
@@ -167,7 +170,7 @@ export interface AppShellMenuActions {
   ]
 })
 export class MgwMatShellComponent implements OnDestroy {
-  @Input() menuLinks: ReadonlyArray<AppShellMenuElems> | undefined;
+  @Input() linksList: ReadonlyArray<AppShellMenuElems> | undefined;
   @Input() isSidenavOpened: BooleanInputTrueFalse | undefined;
   @Input() appTitle: string | undefined;
   @Input() toolbarColor: ThemePalette | undefined;
@@ -180,11 +183,11 @@ export class MgwMatShellComponent implements OnDestroy {
   @Input() activeLink: string | null | undefined;
   @Input() appLogo: string | undefined;
   @Input() menuActionIconOpen: string | undefined;
-  @Input() menuActions: ReadonlyArray<AppShellMenuActions> | undefined;
+  @Input() actionsList: ReadonlyMap<AppShellActionKey, AppShellMenuActions> | undefined;
   @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
 
   @Output() readonly changeLinkNav: EventEmitter<string> = new EventEmitter<string>();
-  @Output() readonly clicBtAction: EventEmitter<string> = new EventEmitter<string>();
+  @Output() readonly clicBtAction: EventEmitter<AppShellActionKey> = new EventEmitter<AppShellActionKey>();
 
   @ViewChild('snav') snav: MatSidenav | undefined;
 
@@ -247,11 +250,15 @@ export class MgwMatShellComponent implements OnDestroy {
     return index;
   }
 
-  trackByActionFn(index: number, item: AppShellMenuActions): string | number {
-    return item.menuText || index;
+  trackByActionFn(index: number, item: KeyValue<AppShellActionKey, AppShellMenuActions>): AppShellActionKey | number {
+    return item.key === '' || (typeof item.key === 'number' && isNaN(item.key)) ? index : item.key;
   }
 
-  clicAction(action: string): void {
-    this.clicBtAction.emit(action);
+  clicAction(actionKey: AppShellActionKey): void {
+    this.clicBtAction.emit(actionKey);
+  }
+
+  compareKeyValueActions(): number {
+    return 0;
   }
 }

@@ -469,7 +469,8 @@
               "transform",
               "trackByFn",
               "trackByLinkFn",
-              "trackByActionFn"
+              "trackByActionFn",
+              "compareKeyValueActions"
             ]
           }
         ],

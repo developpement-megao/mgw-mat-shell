@@ -1,6 +1,6 @@
 {
   "name": "mgw-mat-shell",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "peerDependencies": {
     "@angular/cdk": "^16.2.14",
     "@angular/common": "^16.2.12",
