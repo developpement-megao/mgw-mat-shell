@@ -42,7 +42,7 @@ export interface AppShellMenuActions {
 export type AppShellActionKey = string | number;
 
 @Component({
-  selector: 'lib-mgw-mat-shell',
+  selector: 'mgw-mat-shell',
   standalone: true,
   imports: [
     NgIf,
