@@ -1,0 +1,52 @@
+<div class="shell-container" [class.device-is-mobile]="mobileQuery.matches">
+  <mat-toolbar class="shell-toolbar" [color]="toolbarColor">
+    <button *ngIf="linksList" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
+      <mat-icon>{{ sidenavOpening ? snavIconOpened || iconSidenavOpened : snavIconClosed || iconSidenavClosed }}</mat-icon>
+    </button>
+    <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
+    <h1 *ngIf="appTitle" class="app-name">{{ appTitle }}</h1>
+    <span class="toolbar-spacer"></span>
+    <button *ngIf="actionsList" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Menu action">
+      <mat-icon>{{ menuActionIcon || iconMenuAction }}</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+      <button *ngFor="let item of actionsList | keyvalue: compareKeyValueActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.key)">
+        <mat-icon *ngIf="item.value.menuIco">{{ item.value.menuIco }}</mat-icon>
+        <span>{{ item.value.menuText }}</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="shell-sidenav-container" [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
+    <mat-sidenav
+      #snav
+      [mode]="forceMode ?? (mobileQuery.matches ? forceModeMobile ?? sidenavModeMobile : forceModeDesktop ?? sidenavModeDesktop)"
+      [disableClose]="sidenavDisableClose"
+      [fixedInViewport]="mobileQuery.matches"
+      fixedTopGap="56"
+      [(opened)]="isSidenavOpened"
+      (openedStart)="sidenavOpenedStart()"
+      (openedChange)="sidenavOpenedChange($event)">
+      <mat-nav-list>
+        <ng-container *ngFor="let lk of linksList; trackBy: trackByLinkFn">
+          <div *ngIf="lk | menuElemGetGroup as lkGrp" mat-subheader>{{ lkGrp.groupLibelle }}</div>
+          <a
+            *ngIf="lk | menuElemGetLink as lkLink"
+            mat-list-item
+            [routerLink]="lkLink.shellLink"
+            [activated]="lkLink.shellLink | linkIsActiveLink: activeLink"
+            (click)="clicLink(lkLink.shellLink)">
+            <mat-icon *ngIf="lkLink.linkIcone" matListItemIcon [class.icon-subtitle]="lkLink.linkSubtitle">{{ lkLink.linkIcone }}</mat-icon>
+            <div matListItemTitle>{{ lkLink.linkLabel }}</div>
+            <div *ngIf="lkLink.linkSubtitle" matListItemLine>{{ lkLink.linkSubtitle }}</div>
+          </a>
+          <mat-divider *ngIf="lk === true"></mat-divider>
+        </ng-container>
+      </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content *ngIf="contentTemplate">
+      <ng-container [ngTemplateOutlet]="contentTemplate"></ng-container>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

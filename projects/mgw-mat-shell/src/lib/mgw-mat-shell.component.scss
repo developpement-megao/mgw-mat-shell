@@ -1,0 +1,48 @@
+.shell-container {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.shell-sidenav-container {
+  flex: 1;
+}
+
+.device-is-mobile {
+  .shell-sidenav-container {
+    flex: 1 0 auto;
+  }
+  .shell-toolbar {
+    position: fixed;
+    z-index: 2;
+  }
+}
+
+h1.app-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mdc-list-item.mdc-list-item--with-two-lines .mdc-list-item__start.icon-subtitle {
+  margin-top: 23px;
+}
+
+h1.app-name,
+img.app-logo {
+  margin-left: 8px;
+}
+
+img.app-logo {
+  height: 48px;
+  @media screen and (max-width: 242px) {
+    display: none;
+  }
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}

@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { AppShellMenuElems, AppShellMenuLinks } from './mgw-mat-shell.component';
+import { AppShellMenuElems, AppShellMenuLinks } from '../mgw-mat-shell.component';
 
 export function menuElemIsLink(elem: AppShellMenuElems): elem is AppShellMenuLinks {
   return (elem as AppShellMenuLinks).shellLink !== undefined;

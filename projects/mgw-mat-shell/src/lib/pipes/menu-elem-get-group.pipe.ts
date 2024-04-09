@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { AppShellMenuElems, AppShellMenuGroups } from './mgw-mat-shell.component';
+import { AppShellMenuElems, AppShellMenuGroups } from '../mgw-mat-shell.component';
 
 function menuElemIsGroup(elem: AppShellMenuElems): elem is AppShellMenuGroups {
   return (elem as AppShellMenuGroups).groupLibelle !== undefined;
