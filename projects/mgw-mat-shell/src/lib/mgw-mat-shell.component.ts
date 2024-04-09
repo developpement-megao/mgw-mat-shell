@@ -1,4 +1,4 @@
-import { KeyValue, KeyValuePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, KeyValue, KeyValuePipe, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -17,6 +17,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { LinkIsActiveLinkPipe } from './pipes/link-is-active-link.pipe';
 import { MenuElemGetGroupPipe } from './pipes/menu-elem-get-group.pipe';
 import { MenuElemGetLinkPipe, menuElemIsLink } from './pipes/menu-elem-get-link.pipe';
+import { Observable, map, timer } from 'rxjs';
+import { NumberInput } from '@angular/cdk/coercion';
 
 export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | undefined;
 
@@ -57,7 +59,8 @@ export type AppShellActionKey = string | number;
     MenuElemGetGroupPipe,
     MenuElemGetLinkPipe,
     NgTemplateOutlet,
-    KeyValuePipe
+    KeyValuePipe,
+    AsyncPipe
   ],
   templateUrl: './mgw-mat-shell.component.html',
   styleUrls: ['./mgw-mat-shell.component.scss']
@@ -78,6 +81,8 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   @Input() menuActionIcon: string | undefined;
   @Input() actionsList: ReadonlyMap<AppShellActionKey, AppShellMenuActions> | undefined;
   @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
+  @Input() hasBackdrop: BooleanInputTrueFalse | undefined;
+  @Input() fixedTopGap: NumberInput | undefined;
 
   @Output() readonly changeLinkNav: EventEmitter<string> = new EventEmitter<string>();
   @Output() readonly clicBtAction: EventEmitter<AppShellActionKey> = new EventEmitter<AppShellActionKey>();
@@ -85,6 +90,8 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   @ViewChild('snav') snav: MatSidenav | undefined;
 
   private readonly mobileQueryListener: () => void;
+
+  readonly fixedTopGapDef = 56;
 
   readonly iconSidenavOpened = 'menu_open';
   readonly iconSidenavClosed = 'menu';
@@ -100,13 +107,16 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
 
   sidenavOpening: boolean | undefined;
 
+  sidenavOpen$: Observable<BooleanInputTrueFalse> | undefined;
+
   constructor(changeDetectorRef: ChangeDetectorRef, mediaMatcher: MediaMatcher) {
     this.mobileQuery = mediaMatcher.matchMedia('(max-width: 600px)');
     this.mobileQueryListener = (): void => changeDetectorRef.detectChanges();
+    this.mobileQuery.addListener(this.mobileQueryListener);
   }
 
   ngOnInit(): void {
-    this.mobileQuery.addListener(this.mobileQueryListener);
+    this.sidenavOpen$ = timer(400).pipe(map(() => this.isSidenavOpened));
   }
 
   ngOnDestroy(): void {
@@ -128,8 +138,8 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   }
 
   clicLink(link: string): void {
-    // sur clic sur lien on va fermer le sidenav si on est en version mobile (pas en mode side)
-    if (this.snav?.disableClose !== true && this.snav?.mode !== 'side') {
+    // sur clic sur lien on va fermer le sidenav si on est en version mobile (pas en mode side) ou qu'on a un backdrop
+    if (this.snav?.disableClose !== true && (this.snav?.mode !== 'side' || this.hasBackdrop === true)) {
       this.snav?.close().catch((resu) => {
         console.warn('AppShell comp clicLink close sidenav snav resu ERREUR', resu);
       });
