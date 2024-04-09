@@ -69,8 +69,8 @@ export type AppShellActionKey = string | number;
         <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
         <h1 *ngIf="appTitle" class="app-name">{{ appTitle }}</h1>
         <span class="toolbar-spacer"></span>
-        <button *ngIf="actionsList" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Ouverture menu action">
-          <mat-icon>{{ menuActionIconOpen || iconMenuActionOpen }}</mat-icon>
+        <button *ngIf="actionsList" mat-icon-button type="button" [matMenuTriggerFor]="menu" aria-label="Menu action">
+          <mat-icon>{{ menuActionIcon || iconMenuAction }}</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
           <button *ngFor="let item of actionsList | keyvalue: compareKeyValueActions; trackBy: trackByActionFn" mat-menu-item (click)="clicAction(item.key)">
@@ -182,7 +182,7 @@ export class MgwMatShellComponent implements OnDestroy {
   @Input() snavIconClosed: string | undefined;
   @Input() activeLink: string | null | undefined;
   @Input() appLogo: string | undefined;
-  @Input() menuActionIconOpen: string | undefined;
+  @Input() menuActionIcon: string | undefined;
   @Input() actionsList: ReadonlyMap<AppShellActionKey, AppShellMenuActions> | undefined;
   @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
 
@@ -201,7 +201,7 @@ export class MgwMatShellComponent implements OnDestroy {
 
   readonly logoAltDef = 'Logo';
 
-  readonly iconMenuActionOpen = 'more_vert';
+  readonly iconMenuAction = 'more_vert';
 
   readonly mobileQuery: MediaQueryList;
 
