@@ -28,7 +28,14 @@ h1.app-name {
 }
 
 .mdc-list-item.mdc-list-item--with-two-lines .mdc-list-item__start.icon-subtitle {
-  margin-top: 23px;
+    margin-top: 23px;
+}
+
+.mdc-list-item.mdc-list-item--with-two-lines .mdc-list-item__end.icon-subtitle {
+  margin-top: 12px;
+  &.no-icon {
+    margin-top: 8px;
+  }
 }
 
 h1.app-name,

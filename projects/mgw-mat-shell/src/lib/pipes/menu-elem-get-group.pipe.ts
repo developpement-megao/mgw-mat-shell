@@ -1,9 +1,9 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { AppShellMenuElems, AppShellMenuGroups } from '../mgw-mat-shell.component';
+import { ShellMenuElems, ShellMenuGroups } from '../models/shell-menu-elems';
 
-function menuElemIsGroup(elem: AppShellMenuElems): elem is AppShellMenuGroups {
-  return (elem as AppShellMenuGroups).groupLibelle !== undefined;
+function menuElemIsGroup(elem: ShellMenuElems): elem is ShellMenuGroups {
+  return (elem as ShellMenuGroups).groupLibelle !== undefined;
 }
 
 @Pipe({
@@ -11,7 +11,7 @@ function menuElemIsGroup(elem: AppShellMenuElems): elem is AppShellMenuGroups {
   standalone: true
 })
 export class MenuElemGetGroupPipe implements PipeTransform {
-  transform(value: AppShellMenuElems): AppShellMenuGroups | null {
+  transform(value: ShellMenuElems): ShellMenuGroups | null {
     if (typeof value === 'string') {
       return { groupLibelle: value };
     }

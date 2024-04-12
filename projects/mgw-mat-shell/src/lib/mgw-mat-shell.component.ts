@@ -2,6 +2,7 @@ import { AsyncPipe, KeyValue, KeyValuePipe, NgFor, NgIf, NgTemplateOutlet } from
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { NumberInput } from '@angular/cdk/coercion';
 import { MediaMatcher } from '@angular/cdk/layout';
 
 import { ThemePalette } from '@angular/material/core';
@@ -14,33 +15,22 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
-import { LinkIsActiveLinkPipe } from './pipes/link-is-active-link.pipe';
+import { Observable, map, timer } from 'rxjs';
+
+import { ShellActionKey } from './models/shell-action-key';
+
+import { ShellEmitClic } from './models/shell-emit-clic';
+
+import { ShellMenuActions } from './models/shell-menu-actions';
+import { ShellMenuElems } from './models/shell-menu-elems';
+
 import { MenuElemGetGroupPipe } from './pipes/menu-elem-get-group.pipe';
 import { MenuElemGetLinkPipe, menuElemIsLink } from './pipes/menu-elem-get-link.pipe';
-import { Observable, map, timer } from 'rxjs';
-import { NumberInput } from '@angular/cdk/coercion';
+
+import { LinkElemGetAvatarPipe } from './pipes/link-elem-get-avatar.pipe';
+import { LinkIsActiveLinkPipe } from './pipes/link-is-active-link.pipe';
 
 export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | undefined;
-
-export interface AppShellMenuLinks {
-  shellLink: string;
-  linkLabel: string;
-  linkIcone?: string;
-  linkSubtitle?: string;
-}
-
-export interface AppShellMenuGroups {
-  groupLibelle: string;
-}
-
-export type AppShellMenuElems = AppShellMenuLinks | AppShellMenuGroups | string | true;
-
-export interface AppShellMenuActions {
-  menuText: string;
-  menuIco?: string;
-}
-
-export type AppShellActionKey = string | number;
 
 @Component({
   selector: 'mgw-mat-shell',
@@ -60,13 +50,14 @@ export type AppShellActionKey = string | number;
     MenuElemGetLinkPipe,
     NgTemplateOutlet,
     KeyValuePipe,
-    AsyncPipe
+    AsyncPipe,
+    LinkElemGetAvatarPipe
   ],
   templateUrl: './mgw-mat-shell.component.html',
   styleUrls: ['./mgw-mat-shell.component.scss']
 })
 export class MgwMatShellComponent implements OnInit, OnDestroy {
-  @Input() linksList: ReadonlyArray<AppShellMenuElems> | undefined;
+  @Input() linksList: ReadonlyArray<ShellMenuElems> | undefined;
   @Input() isSidenavOpened: BooleanInputTrueFalse | undefined;
   @Input() appTitle: string | undefined;
   @Input() toolbarColor: ThemePalette | undefined;
@@ -79,13 +70,14 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   @Input() activeLink: string | null | undefined;
   @Input() appLogo: string | undefined;
   @Input() menuActionIcon: string | undefined;
-  @Input() actionsList: ReadonlyMap<AppShellActionKey, AppShellMenuActions> | undefined;
+  @Input() actionsList: ReadonlyMap<ShellActionKey, ShellMenuActions> | undefined;
   @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
   @Input() hasBackdrop: BooleanInputTrueFalse | undefined;
   @Input() fixedTopGap: NumberInput | undefined;
 
-  @Output() readonly changeLinkNav: EventEmitter<string> = new EventEmitter<string>();
-  @Output() readonly clicBtAction: EventEmitter<AppShellActionKey> = new EventEmitter<AppShellActionKey>();
+  @Output() readonly changeLinkNav: EventEmitter<ShellEmitClic> = new EventEmitter<ShellEmitClic>();
+  @Output() readonly clicBtAction: EventEmitter<ShellActionKey> = new EventEmitter<ShellActionKey>();
+  @Output() readonly clicBtMeta: EventEmitter<ShellEmitClic> = new EventEmitter<ShellEmitClic>();
 
   @ViewChild('snav') snav: MatSidenav | undefined;
 
@@ -102,6 +94,8 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   readonly logoAltDef = 'Logo';
 
   readonly iconMenuAction = 'more_vert';
+
+  readonly avatarImgAltDef = 'Avatar';
 
   readonly mobileQuery: MediaQueryList;
 
@@ -137,18 +131,18 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
     this.sidenavOpening = openState;
   }
 
-  clicLink(link: string): void {
+  clicLink(link: string, index: number): void {
     // sur clic sur lien on va fermer le sidenav si on est en version mobile (pas en mode side) ou qu'on a un backdrop
     if (this.snav?.disableClose !== true && (this.snav?.mode !== 'side' || this.hasBackdrop === true)) {
       this.snav?.close().catch((resu) => {
         console.warn('AppShell comp clicLink close sidenav snav resu ERREUR', resu);
       });
     }
-    this.changeLinkNav.emit(link);
+    this.changeLinkNav.emit({ identif: link, index });
   }
 
-  trackByLinkFn(index: number, item: AppShellMenuElems): string | number {
-    if (menuElemIsLink(item)) {
+  trackByLinkFn(index: number, item: ShellMenuElems): string | number {
+    if (menuElemIsLink(item) && item.shellLink) {
       // on est sur un lien l'identifiant est le shellLink
       return item.shellLink;
     }
@@ -156,15 +150,21 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
     return index;
   }
 
-  trackByActionFn(index: number, item: KeyValue<AppShellActionKey, AppShellMenuActions>): AppShellActionKey | number {
+  trackByActionFn(index: number, item: KeyValue<ShellActionKey, ShellMenuActions>): ShellActionKey | number {
     return item.key === '' || (typeof item.key === 'number' && isNaN(item.key)) ? index : item.key;
   }
 
-  clicAction(actionKey: AppShellActionKey): void {
+  clicAction(actionKey: ShellActionKey): void {
     this.clicBtAction.emit(actionKey);
   }
 
   compareKeyValueActions(): number {
     return 0;
+  }
+
+  clicMeta(evt: Event, identif: string, index: number): void {
+    evt.preventDefault();
+    evt.stopPropagation();
+    this.clicBtMeta.emit({ identif, index });
   }
 }

@@ -28,17 +28,27 @@
       (openedStart)="sidenavOpenedStart()"
       (openedChange)="sidenavOpenedChange($event)">
       <mat-nav-list>
-        <ng-container *ngFor="let lk of linksList; trackBy: trackByLinkFn">
+        <ng-container *ngFor="let lk of linksList; let i = index; trackBy: trackByLinkFn">
           <div *ngIf="lk | menuElemGetGroup as lkGrp" mat-subheader>{{ lkGrp.groupLibelle }}</div>
           <a
             *ngIf="lk | menuElemGetLink as lkLink"
             mat-list-item
             [routerLink]="lkLink.shellLink"
             [activated]="lkLink.shellLink | linkIsActiveLink: activeLink"
-            (click)="clicLink(lkLink.shellLink)">
-            <mat-icon *ngIf="lkLink.linkIcone" matListItemIcon [class.icon-subtitle]="lkLink.linkSubtitle">{{ lkLink.linkIcone }}</mat-icon>
-            <div matListItemTitle>{{ lkLink.linkLabel }}</div>
+            (click)="clicLink(lkLink.shellLink, i)">
+            <img
+              *ngIf="lkLink.linkAvatar | linkElemGetAvatar as lkAvatar"
+              matListItemAvatar
+              [src]="lkAvatar.avatarImgSrc"
+              [alt]="lkAvatar.avatarImgAlt || avatarImgAltDef" />
+            <mat-icon *ngIf="lkLink.linkIcone && !lkLink.linkAvatar" matListItemIcon [class.icon-subtitle]="lkLink.linkSubtitle">{{ lkLink.linkIcone }}</mat-icon>
+            <div matListItemTitle>{{ lkLink.linkLabel || lkLink.shellLink }}</div>
             <div *ngIf="lkLink.linkSubtitle" matListItemLine>{{ lkLink.linkSubtitle }}</div>
+            <div *ngIf="lkLink.linkMetaIcone" matListItemMeta [class.icon-subtitle]="lkLink.linkSubtitle" [class.no-icon]="!lkLink.linkIcone && !lkLink.linkAvatar">
+              <button mat-icon-button type="button" (click)="clicMeta($event, lkLink.shellLink, i)">
+                <mat-icon>{{ lkLink.linkMetaIcone }}</mat-icon>
+              </button>
+            </div>
           </a>
           <mat-divider *ngIf="lk === true"></mat-divider>
         </ng-container>

@@ -1,16 +1,16 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { AppShellMenuElems, AppShellMenuLinks } from '../mgw-mat-shell.component';
+import { ShellMenuElems, ShellMenuLinks } from '../models/shell-menu-elems';
 
-export function menuElemIsLink(elem: AppShellMenuElems): elem is AppShellMenuLinks {
-  return (elem as AppShellMenuLinks).shellLink !== undefined;
+export function menuElemIsLink(elem: ShellMenuElems): elem is ShellMenuLinks {
+  return (elem as ShellMenuLinks).shellLink !== undefined;
 }
 @Pipe({
   name: 'menuElemGetLink',
   standalone: true
 })
 export class MenuElemGetLinkPipe implements PipeTransform {
-  transform(value: AppShellMenuElems): AppShellMenuLinks | null {
+  transform(value: ShellMenuElems): ShellMenuLinks | null {
     if (menuElemIsLink(value)) {
       return value;
     }
