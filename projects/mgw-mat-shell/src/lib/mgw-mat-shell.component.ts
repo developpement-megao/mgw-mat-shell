@@ -7,15 +7,11 @@ import { MediaMatcher } from '@angular/cdk/layout';
 
 import { ThemePalette } from '@angular/material/core';
 
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDrawerMode, MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatDrawerMode, MatSidenav } from '@angular/material/sidenav';
 
 import { Observable, map, timer } from 'rxjs';
+
+import { MaterialModule } from './material.module';
 
 import { ShellActionKey } from './models/shell-action-key';
 
@@ -29,6 +25,8 @@ import { MenuElemGetLinkPipe, menuElemIsLink } from './pipes/menu-elem-get-link.
 
 import { LinkElemGetAvatarPipe } from './pipes/link-elem-get-avatar.pipe';
 import { LinkIsActiveLinkPipe } from './pipes/link-is-active-link.pipe';
+import { ShellMenuTabs } from '../public-api';
+import { TabIsActiveLinkPipe } from './pipes/tab-is-active-link.pipe';
 
 export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | undefined;
 
@@ -38,12 +36,6 @@ export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | un
   imports: [
     NgIf,
     NgFor,
-    MatButtonModule,
-    MatIconModule,
-    MatSidenavModule,
-    MatToolbarModule,
-    MatMenuModule,
-    MatListModule,
     RouterLink,
     LinkIsActiveLinkPipe,
     MenuElemGetGroupPipe,
@@ -51,7 +43,9 @@ export type BooleanInputTrueFalse = 'true' | 'false' | '1' | boolean | null | un
     NgTemplateOutlet,
     KeyValuePipe,
     AsyncPipe,
-    LinkElemGetAvatarPipe
+    LinkElemGetAvatarPipe,
+    MaterialModule,
+    TabIsActiveLinkPipe
   ],
   templateUrl: './mgw-mat-shell.component.html',
   styleUrls: ['./mgw-mat-shell.component.scss']
@@ -74,6 +68,8 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   @Input() contentTemplate: TemplateRef<unknown> | null | undefined;
   @Input() hasBackdrop: BooleanInputTrueFalse | undefined;
   @Input() fixedTopGap: NumberInput | undefined;
+  @Input() tabsLinkList: ReadonlyArray<ShellMenuTabs> | undefined;
+  @Input() tabLinkBackgroundColor: ThemePalette | undefined;
 
   @Output() readonly changeLinkNav: EventEmitter<ShellEmitClic> = new EventEmitter<ShellEmitClic>();
   @Output() readonly clicBtAction: EventEmitter<ShellActionKey> = new EventEmitter<ShellActionKey>();
@@ -138,7 +134,7 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
         console.warn('AppShell comp clicLink close sidenav snav resu ERREUR', resu);
       });
     }
-    this.changeLinkNav.emit({ identif: link, index });
+    this.changeLinkNav.emit({ identif: link, index, type: 'S' });
   }
 
   trackByLinkFn(index: number, item: ShellMenuElems): string | number {
@@ -165,6 +161,14 @@ export class MgwMatShellComponent implements OnInit, OnDestroy {
   clicMeta(evt: Event, identif: string, index: number): void {
     evt.preventDefault();
     evt.stopPropagation();
-    this.clicBtMeta.emit({ identif, index });
+    this.clicBtMeta.emit({ identif, index, type: 'S' });
+  }
+
+  trackByTabLinkFn(index: number, item: ShellMenuTabs): string | number {
+    return item.tabLink || index;
+  }
+
+  clicTabLink(link: string, index: number): void {
+    this.changeLinkNav.emit({ identif: link, index, type: 'T' });
   }
 }

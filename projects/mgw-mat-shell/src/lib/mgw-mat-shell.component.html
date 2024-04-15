@@ -1,6 +1,6 @@
 <div class="shell-container" [class.device-is-mobile]="mobileQuery.matches">
   <mat-toolbar class="shell-toolbar" [color]="toolbarColor">
-    <button *ngIf="linksList" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
+    <button *ngIf="linksList && linksList.length" mat-icon-button type="button" aria-label="Ouverture menu principal" (click)="toggleSidenav()">
       <mat-icon>{{ sidenavOpening ? snavIconOpened || iconSidenavOpened : snavIconClosed || iconSidenavClosed }}</mat-icon>
     </button>
     <img *ngIf="appLogo" [src]="appLogo" [alt]="appTitle || logoAltDef" class="app-logo" />
@@ -56,7 +56,24 @@
     </mat-sidenav>
 
     <mat-sidenav-content *ngIf="contentTemplate">
-      <ng-container [ngTemplateOutlet]="contentTemplate"></ng-container>
+      <ng-container *ngIf="tabsLinkList && tabsLinkList.length; else noTab">
+        <nav mat-tab-nav-bar [backgroundColor]="tabLinkBackgroundColor" [tabPanel]="tabPanel">
+          <a
+            mat-tab-link
+            *ngFor="let link of tabsLinkList; let i = index; trackBy: trackByTabLinkFn"
+            [routerLink]="link.tabLink"
+            [active]="link.tabLink | tabIsActiveLink: activeLink"
+            (click)="clicTabLink(link.tabLink, i)">
+            {{ link.tabLib }}
+          </a>
+        </nav>
+        <mat-tab-nav-panel #tabPanel>
+          <ng-container [ngTemplateOutlet]="contentTemplate"></ng-container>
+        </mat-tab-nav-panel>
+      </ng-container>
+      <ng-template #noTab>
+        <ng-container [ngTemplateOutlet]="contentTemplate"></ng-container>
+      </ng-template>
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>

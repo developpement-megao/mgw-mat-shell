@@ -470,7 +470,8 @@
               "trackByFn",
               "trackByLinkFn",
               "trackByActionFn",
-              "compareKeyValueActions"
+              "compareKeyValueActions",
+              "trackByTabLinkFn"
             ]
           }
         ],
